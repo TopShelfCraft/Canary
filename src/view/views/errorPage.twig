@@ -1,0 +1,182 @@
+{% set e = report.error %}
+
+<!doctype html>
+<html lang="en">
+
+<head>
+
+	<meta charset="utf-8"/>
+
+	<title>
+		{{ e.getMessage() }}
+	</title>
+
+	<style>
+		html { scroll-behavior: smooth; }
+		@media screen and (prefers-reduced-motion: reduce) {
+			html {
+				scroll-behavior: auto;
+			}
+		}
+		{{ source('assets/errorPage.css') }}
+		{{ source('assets/_tailwind.css') }}
+	</style>
+
+	<script>
+		var app = {
+			init: function() {
+
+			},
+			tab: 'Request',
+			changeTab: function(tab)
+			{
+				this.tab = tab;
+			},
+			frame: 1,
+			changeFrame: function(frame)
+			{
+				this.frame = frame;
+			}
+		};
+	</script>
+
+</head>
+
+<body class="p-3" x-data="app" x-init="app.init" id="tab_wrapper">
+
+	<div id="sidebarContainer" class="md:fixed md:inset-0 md:w-1/3 p-3 flex flex-col">
+
+		<div id="errorPane" class="mb-6">
+
+			<div class="flex justify-between" style="">
+
+				<div class="flex-grow pl-2 pr-1 py-1 text-sm text-gray-600 text-left">
+					<p class="">{{ report.errorName }}</p>
+				</div>
+				<div class="flex-no-shrink mr-1" style="margin-bottom: -16px; width: 50px;">
+					{{ source('assets/canary.svg') }}
+				</div>
+
+			</div>
+
+			<div class="p-6 rounded-sm shadow bg-gray-800 text-gray-200 text-lg font-medium">
+				{{ e.getMessage() }}
+			</div>
+
+		</div>
+
+		<div id="frameSelectorPane" class="flex-grow flex flex-col min-h-0 rounded-sm shadow bg-gray-100">
+
+			<div class=" py-2 px-3 bg-gray-300 border-b text-xs uppercase">
+				<p>Stack trace</p>
+			</div>
+
+			<div class="overflow-y-auto">
+				<ul>
+					{% for frame in report.getFrames() %}
+						<li class="overflow-hidden" :class="{ 'active border-l-2 border-orange-600 bg-gray-200 text-gray-900': frame === {{ loop.index }} }">
+							<a href="#debuggerContainer" @click="changeFrame({{ loop.index }})"
+							   class="flex items-center hover:bg-yellow-100 focus:outline-none focus:bg-gray-300">
+								<div class="p-3 overflow-hidden">
+									<div class="flex items-center mb-3">
+										<div class="flex-no-grow leading-none">
+											<span class="mr-2 py-1 px-2 text-xs rounded-full bg-white border border-gray-200">{{ loop.index }}</span>
+										</div>
+										<p class="text-sm {{ loop.index == 1 ? 'font-bold' }}">
+											{{ frame.class }}
+											{{ frame.class and frame.function ? ' :: ' }}
+											{% if frame.function %}
+												<span class="font-bold font-mono">{{ frame.function }}()</span>
+											{% endif %}
+										</p>
+									</div>
+									<p class="ml-3 text-xs">
+										<span class="italic text-gray-600 font-light">in</span>
+										<span class="text-gray-700 break-words">{{ frame.file | replace({ '/': '&ZeroWidthSpace;/' }) | trim('&ZeroWidthSpace;', side='left') | raw }}</span>
+										<span class="italic text-gray-600 font-light">[{{ frame.line }}]</span>
+									</p>
+								</div>
+							</a>
+						</li>
+					{% endfor %}
+				</ul>
+			</div>
+
+		</div>
+
+	</div>
+
+	<div id="debuggerContainer" class="md:w-2/3 md:absolute p-3 flex-grow flex flex-col" style="top:0;right:0;">
+
+			<div id="frameDisplayPane" class="mt-6 mb-6 p-6 flex-no-grow rounded-md shadow bg-gray-200">
+
+				{% for f, frame in report.getFrames() %}
+					<div x-show="frame === {{ loop.index }}">
+						<div class="text-sm">
+							{% for i, line in frame.lines if i >= frame.begin and i <= frame.end %}
+								<pre class="flex">
+									<span class="font-mono pr-3 bg-gray-200 text-gray-500 select-none">{{ i+1 }}</span>
+									<code class="font-mono break-words {{ i+1 == frame.line ? 'bg-orange-200' }}">{{ line }}</code>
+								</pre>
+							{% endfor %}
+						</div>
+					</div>
+				{% endfor %}
+
+			</div>
+
+			<div id="contextPane" class=" flex-grow rounded-md shadow bg-gray-100">
+
+				<div class="border-b border-gray-200">
+					<nav class="-mb-px flex justify-start">
+						{% for n in ['Request', 'User', 'App', 'Environment', 'Debug'] %}
+							<a href="#" :class="{ 'active border-orange-600 bg-gray-200 text-gray-900': tab === '{{ n }}' }" @click.prevent="changeTab('{{ n }}')"
+							   class="block flex-grow whitespace-no-wrap text-center py-4 px-4 border-b-2 font-medium text-sm leading-5 text-gray-600 hover:bg-yellow-100">
+								{{ n }}
+							</a>
+						{% endfor %}
+					</nav>
+				</div>
+
+				<div class="p-6" x-show="tab === 'Request'">
+					<h3>Post</h3>
+					<p>...</p>
+					<h3>Get</h3>
+					<p>...</p>
+					<h3>Route</h3>
+					<p>...</p>
+				</div>
+
+				<div class="p-6" x-show="tab === 'User'">
+					<h3>Craft User</h3>
+					<p>...</p>
+					<h3>Browser</h3>
+					<p>...</p>
+					<h3>Device</h3>
+					<p>...</p>
+				</div>
+
+				<div class="p-6" x-show="tab === 'App'">
+					<p>(App)</p>
+				</div>
+
+				<div class="p-6" x-show="tab === 'Environment'">
+					<p>(Environment)</p>
+				</div>
+
+				<div class="p-6" x-show="tab === 'Debug'">
+					<h3>Chirps</h3>
+					<p>...</p>
+					<h3>Timing</h3>
+					<p>...</p>
+				</div>
+
+			</div>
+
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+
+</body>
+
+</html>
