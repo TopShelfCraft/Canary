@@ -86,7 +86,7 @@ class ErrorReport
 
 		$out = [];
 
-		foreach ($frames as $i => $frame)
+		foreach ($frames as $frameIndex => $frame)
 		{
 
 			$lines = [];
@@ -97,16 +97,33 @@ class ErrorReport
 			$line = $frame['line'] ?? null;
 
 			if ($file !== null && $line !== null) {
+
 				$line--; // adjust line number from one-based to zero-based
 				$lines = @file($file);
-				if ($line < 0 || $lines === false || ($lineCount = count($lines)) < $line) {
-					return '';
+
+				if (is_array($lines))
+				{
+					// Shift the lines to be 1-indexed, so array keys match line numbers.
+					array_unshift($lines, null);
+					unset($lines[0]);
 				}
 
-				$linesToShow = ($i === 0 ? $this->maxSourceLines : $this->maxTraceSourceLines);
-				$half = (int) ($linesToShow / 2);
-				$begin = $line - $half > 0 ? $line - $half : 0;
-				$end = $line + $half < $lineCount ? $line + $half : $lineCount - 1;
+				if ($line < 0 || $lines === false || ($lineCount = count($lines)) < $line) {
+					// Dummy values if something went wonky.
+					// TODO: Happy path
+					$lines = [];
+					$start = null;
+					$end = null;
+				}
+				else
+				{
+					// TODO: Happy path
+					$linesToShow = ($frameIndex === 0 ? $this->maxSourceLines : $this->maxTraceSourceLines);
+					$half = (int) ($linesToShow / 2);
+					$begin = $line - $half > 0 ? $line - $half : 1;
+					$end = $line + $half <= $lineCount ? $line + $half : $lineCount;
+				}
+
 			}
 
 			$out[] = $frame +

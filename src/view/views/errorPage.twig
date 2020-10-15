@@ -113,10 +113,10 @@
 				{% for f, frame in report.getFrames() %}
 					<div x-show="frame === {{ loop.index }}">
 						<div class="text-sm">
-							{% for i, line in frame.lines if i >= frame.begin and i <= frame.end %}
+							{% for l, line in frame.lines if l >= frame.begin and l <= frame.end %}
 								<pre class="flex">
-									<span class="font-mono pr-3 bg-gray-200 text-gray-500 select-none">{{ i+1 }}</span>
-									<code class="font-mono break-words {{ i+1 == frame.line ? 'bg-orange-200' }}">{{ line }}</code>
+									<span class="font-mono pr-3 bg-gray-200 text-gray-500 select-none">{{ l }}</span>
+									<code class="font-mono break-words {{ l == frame.line ? 'bg-orange-200' }}">{{ line }}</code>
 								</pre>
 							{% endfor %}
 						</div>
