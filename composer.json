@@ -1,8 +1,8 @@
 {
 	"name": "topshelfcraft/canary",
-	"description": "The kinder, cuter, cleverer error handler.",
-	"type": "craft-module",
-	"version": "3.0.1",
+	"description": "The kinder, cuter, cleverer Craft error handler.",
+	"type": "craft-plugin",
+	"version": "3.0.2",
 	"keywords": [
 		"error",
 		"errors",
@@ -35,5 +35,11 @@
 		"psr-4": {
 			"topshelfcraft\\canary\\": "src/"
 		}
+	},
+	"extra": {
+		"name": "Canary",
+		"handle": "canary",
+		"changelogUrl": "https://raw.githubusercontent.com/topshelfcraft/canary/master/CHANGELOG.md",
+		"class": "topshelfcraft\\canary\\Canary"
 	}
 }

@@ -1,6 +1,6 @@
 # Canary
 
-_The friendlier, clever-er error handler for Craft CMS 3.x_
+_The kinder, cuter, cleverer error handler for Craft CMS 3.x_
 
 **A [Top Shelf Craft](https://topshelfcraft.com) creation**  
 [Michael Rog](https://michaelrog.com), Proprietor
