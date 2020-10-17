@@ -42,7 +42,7 @@
 
 </head>
 
-<body class="p-3" x-data="app" x-init="app.init" id="tab_wrapper">
+<body class="p-3 overflow-y-scroll" x-data="app" x-init="app.init" id="tab_wrapper">
 
 	<div id="sidebarContainer" class="md:fixed md:inset-0 md:w-1/3 p-3 flex flex-col">
 
@@ -51,7 +51,7 @@
 			<div class="flex justify-between" style="">
 
 				<div class="flex-grow pl-2 pr-1 py-1 text-sm text-gray-600 text-left">
-					<p class="">{{ report.errorName }}</p>
+					<p class="">{{ report.getErrorName() }}</p>
 				</div>
 				<div class="flex-no-shrink mr-1" style="margin-bottom: -16px; width: 50px;">
 					{{ source('assets/canary.svg') }}
@@ -60,7 +60,7 @@
 			</div>
 
 			<div class="p-6 rounded-sm shadow bg-gray-800 text-gray-200 text-lg font-medium">
-				{{ e.getMessage() }}
+				{{ report.getErrorMessage() }}
 			</div>
 
 		</div>
@@ -108,16 +108,21 @@
 
 	<div id="debuggerContainer" class="md:w-2/3 md:absolute p-3 flex-grow flex flex-col" style="top:0;right:0;">
 
-			<div id="frameDisplayPane" class="mt-6 mb-6 p-6 flex-no-grow rounded-md shadow bg-gray-200">
+			<div id="frameDisplayPane" class="mt-6 mb-6 p-3 flex-no-grow rounded-md shadow bg-gray-200">
 
 				{% for f, frame in report.getFrames() %}
+					{% set bgColors = {
+						(frame.line): 'bg-orange-200',
+						(frame.line+1): 'bg-orange-100',
+						(frame.line-1): 'bg-orange-100',
+					} %}
 					<div x-show="frame === {{ loop.index }}">
 						<div class="text-sm">
 							{% for l, line in frame.lines if l >= frame.begin and l <= frame.end %}
-								<pre class="flex">
-									<span class="font-mono pr-3 bg-gray-200 text-gray-500 select-none">{{ l }}</span>
-									<code class="font-mono break-words {{ l == frame.line ? 'bg-orange-200' }}">{{ line }}</code>
-								</pre>
+								<div class="flex {{ bgColors[l] ?? '' }}">
+									<span class="font-mono pl-1 pr-3 text-gray-500 select-none">{{ l }}</span>
+									<code class="font-mono whitespace-pre-wrap overflow-hidden">{{ line }}</code>
+								</div>
 							{% endfor %}
 						</div>
 					</div>
@@ -129,47 +134,23 @@
 
 				<div class="border-b border-gray-200">
 					<nav class="-mb-px flex justify-start">
-						{% for n in ['Request', 'User', 'App', 'Environment', 'Debug'] %}
-							<a href="#" :class="{ 'active border-orange-600 bg-gray-200 text-gray-900': tab === '{{ n }}' }" @click.prevent="changeTab('{{ n }}')"
+						{% for title, tab in report.getContextTabs() %}
+							<a href="#" :class="{ 'active border-orange-600 bg-gray-200 text-gray-900': tab === '{{ title }}' }" @click.prevent="changeTab('{{ title }}')"
 							   class="block flex-grow whitespace-no-wrap text-center py-4 px-4 border-b-2 font-medium text-sm leading-5 text-gray-600 hover:bg-yellow-100">
-								{{ n }}
+								{{ title }}
 							</a>
 						{% endfor %}
 					</nav>
 				</div>
 
-				<div class="p-6" x-show="tab === 'Request'">
-					<h3>Post</h3>
-					<p>...</p>
-					<h3>Get</h3>
-					<p>...</p>
-					<h3>Route</h3>
-					<p>...</p>
+				{% for title, tab in report.getContextTabs() %}
+				<div class="p-6" x-show="tab === '{{ title }}'">
+					{% for heading, context in tab %}
+					<h3 class="font-bold text-base mb-3">{{ heading }}</h3>
+					{{  context.renderWeb() }}
+					{% endfor %}
 				</div>
-
-				<div class="p-6" x-show="tab === 'User'">
-					<h3>Craft User</h3>
-					<p>...</p>
-					<h3>Browser</h3>
-					<p>...</p>
-					<h3>Device</h3>
-					<p>...</p>
-				</div>
-
-				<div class="p-6" x-show="tab === 'App'">
-					<p>(App)</p>
-				</div>
-
-				<div class="p-6" x-show="tab === 'Environment'">
-					<p>(Environment)</p>
-				</div>
-
-				<div class="p-6" x-show="tab === 'Debug'">
-					<h3>Chirps</h3>
-					<p>...</p>
-					<h3>Timing</h3>
-					<p>...</p>
-				</div>
+				{% endfor %}
 
 			</div>
 

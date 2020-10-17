@@ -1,7 +1,13 @@
 <?php
 namespace topshelfcraft\canary;
 
+use Craft;
+use craft\base\PluginInterface;
+use craft\helpers\App;
 use Throwable;
+use topshelfcraft\canary\context\ValueListContext;
+use Yii;
+use yii\base\Module;
 
 class ErrorReport
 {
@@ -68,6 +74,30 @@ class ErrorReport
 
 	}
 
+	/**
+	 * @return string
+	 */
+	public function getErrorMessage()
+	{
+
+		if ($this->handler && ($message = $this->handler->getErrorMessage($this->error)))
+		{
+			return $message;
+		}
+
+		if ($message = $this->error->getMessage())
+		{
+			return $message;
+		}
+
+		// TODO: Come up with a less ominous default message?
+		return "Something went wrong...";
+
+	}
+
+	/**
+	 * @return array
+	 */
 	public function getFrames()
 	{
 
@@ -136,6 +166,193 @@ class ErrorReport
 		}
 
 		return $out;
+
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getContextTabs()
+	{
+
+		$tabs = [
+			"Request" => [],
+			"User" => [],
+			"App" => [],
+			"Environment" => [],
+			"Debug" => [],
+		];
+
+		try
+		{
+			if (!empty($queryParams = Yii::$app->getRequest()->getQueryParams()))
+			{
+				$tabs["Request"]["Query Params / GET"] = new ValueListContext(array_map('json_encode', $queryParams));
+			}
+
+		}
+		catch(Throwable $e)
+		{
+			// TODO: Display error message.
+		}
+
+		try
+		{
+			if (!empty($bodyParams = Yii::$app->getRequest()->getBodyParams()))
+			{
+				$tabs["Request"]["Body Parameters / POST"] = new ValueListContext(array_map('json_encode', $bodyParams));
+			}
+		}
+		catch(Throwable $e)
+		{
+			// TODO: Display error message.
+		}
+
+		try
+		{
+			$tabs["Request"]["Route"] = new ValueListContext([
+				'Controller / Action' => Craft::$app->requestedRoute,
+				// TODO: Craft::$app->controller->actionParams
+			]);
+		}
+		catch(Throwable $e)
+		{
+			// TODO: Display error message.
+		}
+
+		try
+		{
+			$tabs["Request"]["Session"] = new ValueListContext([
+				'ID' => Yii::$app->getSession()->getId()
+			]);
+		}
+		catch(Throwable $e)
+		{
+			// TODO: Display error message.
+		}
+
+		// TODO: Add Cookies to "Request" tab.
+
+
+
+		try
+		{
+			$tabs["User"]["User"] = new ValueListContext([
+				"ID" => ($id = Craft::$app->getUser()->getId()) ? $id : "Guest"
+			]);
+		}
+		catch(Throwable $e)
+		{
+			// TODO: Display error message
+		}
+
+		// TODO: Add Browser to "User" tab
+		// TODO: Device to "User" tab
+
+
+
+		try
+		{
+			$tabs["App"]["Application Info"] = new ValueListContext([
+				'PHP version' => App::phpVersion(),
+				'OS version' => PHP_OS . ' ' . php_uname('r'),
+				'Craft edition & version' => 'Craft ' . App::editionName(Craft::$app->getEdition()) . ' ' . Craft::$app->getVersion(),
+				'Yii version' => Yii::getVersion(),
+			]);
+		}
+		catch(Throwable $e)
+		{
+			// TODO: Render useful error message as Message context.
+		}
+
+		try
+		{
+
+			$modules = [];
+			foreach (Craft::$app->getModules() as $id => $module) {
+				if ($module instanceof PluginInterface) {
+					continue;
+				}
+				if ($module instanceof Module) {
+					$modules[$id] = get_class($module);
+				} else if (is_string($module)) {
+					$modules[$id] = $module;
+				} else if (is_array($module) && isset($module['class'])) {
+					$modules[$id] = $module['class'];
+				} else {
+					$modules[$id] = "(Unknown type)";
+				}
+			}
+
+			$tabs["App"]["Modules"] = new ValueListContext($modules);
+
+		}
+		catch(Throwable $e)
+		{
+			// TODO: Display error message
+		}
+
+		try
+		{
+
+			$plugins = array_map(
+				function(PluginInterface $plugin) {
+					return get_class($plugin);
+				},
+				Craft::$app->getPlugins()->getAllPlugins()
+			);
+			ksort($plugins);
+
+			$tabs["App"]["Plugins"] = new ValueListContext($plugins);
+
+		}
+		catch(Throwable $e)
+		{
+			// TODO: Render useful error message as Message context.
+		}
+
+		try
+		{
+
+			$aliases = [];
+			foreach (Craft::$aliases as $alias => $value) {
+				if (is_array($value)) {
+					foreach ($value as $a => $v) {
+						$aliases[$a] = $v;
+					}
+				} else {
+					$aliases[$alias] = $value;
+				}
+			}
+			ksort($aliases);
+
+			$tabs["App"]["Aliases"] = new ValueListContext($aliases);
+
+		}
+		catch(Throwable $e)
+		{
+			// TODO: Render useful error message as Message context.
+		}
+
+
+
+		try
+		{
+			$tabs["Environment"]["ENV"] = new ValueListContext(getenv());
+		}
+		catch(Throwable $e)
+		{
+			// TODO: Render useful error message as Message context.
+		}
+
+
+
+		// TODO: Add Chirps to "Debug" tab.
+		// TODO: Add Timing to "Debug" tab.
+
+
+
+		return $tabs;
 
 	}
 

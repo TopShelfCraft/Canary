@@ -43,6 +43,16 @@ class ErrorHandler extends \craft\web\ErrorHandler
 		return new ErrorReport($this->exception);
 	}
 
+	/**
+	 * @param \Throwable $error
+	 *
+	 * @return string|null
+	 */
+	public function getErrorMessage(\Throwable $error)
+	{
+		return $error->getMessage();
+	}
+
 
 
 
@@ -92,6 +102,7 @@ class ErrorHandler extends \craft\web\ErrorHandler
 
 		$whoops->pushHandler(function($exception, $exceptionInspector, $runInstance) {
 			foreach($exceptionInspector->getFrames() as $i => $frame) {
+				continue;
 				/** @var Frame $frame */
 
 				if ($frame->getClass() && StringHelper::startsWith($frame->getClass(), 'craft', false))
