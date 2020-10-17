@@ -338,7 +338,61 @@ class ErrorReport
 
 		try
 		{
-			$tabs["Environment"]["ENV"] = new ValueListContext(getenv());
+
+			// Remove any arrays from $_SERVER to get around an "Array to string conversion" error
+			$serverVals = [];
+			if (isset($_SERVER))
+			{
+				foreach ($_SERVER as $key => $value)
+				{
+					if (is_array($value))
+					{
+						$value = '(Array)';
+					}
+					$serverVals[$key] = Craft::$app->getSecurity()->redactIfSensitive($key, $value);
+				}
+			}
+
+			// Remove any arrays from $_ENV to get around an "Array to string conversion" error
+			if (isset($_ENV))
+			{
+				foreach ($_ENV as $key => $value)
+				{
+					if (is_array($value))
+					{
+						$value = '(Array)';
+					}
+					$serverVals[$key] = Craft::$app->getSecurity()->redactIfSensitive($key, $value);
+				}
+			}
+
+			$tabs["Environment"]['Server/Environment Values'] = new ValueListContext($serverVals);
+
+		}
+		catch(Throwable $e)
+		{
+			// TODO: Render useful error message as Message context.
+		}
+
+		try
+		{
+
+			// Remove any arrays from $_COOKIE to get around an "Array to string conversion" error
+			$cookieVals = [];
+			if (isset($_COOKIE))
+			{
+				foreach ($_COOKIE as $key => $value)
+				{
+					$cookieVals[$key] = $value;
+					if (is_array($value))
+					{
+						$cookieVals[$key] = '(Array)';
+					}
+				}
+			}
+
+			$tabs["Environment"]['Cookies'] = new ValueListContext($cookieVals);
+
 		}
 		catch(Throwable $e)
 		{
