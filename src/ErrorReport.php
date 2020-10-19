@@ -383,11 +383,11 @@ class ErrorReport
 			{
 				foreach ($_COOKIE as $key => $value)
 				{
-					$cookieVals[$key] = $value;
 					if (is_array($value))
 					{
-						$cookieVals[$key] = '(Array)';
+						$value = '(Array)';
 					}
+					$cookieVals[$key] = Craft::$app->getSecurity()->redactIfSensitive($key, $value);
 				}
 			}
 

@@ -50,7 +50,7 @@
 
 			<div class="flex justify-between" style="">
 
-				<div class="flex-grow pl-2 pr-1 py-1 text-sm text-gray-600 text-left">
+				<div class="flex-grow pl-2 pr-1 py-1 text-sm text-gray-600 text-left break-words">
 					<p class="">{{ report.getErrorName() }}</p>
 				</div>
 				<div class="flex-no-shrink mr-1" style="margin-bottom: -16px; width: 50px;">
@@ -59,7 +59,7 @@
 
 			</div>
 
-			<div class="p-6 rounded-sm shadow bg-gray-800 text-gray-200 text-lg font-medium">
+			<div class="p-6 rounded-sm shadow bg-gray-800 text-gray-200 text-lg font-medium break-words">
 				{{ report.getErrorMessage() }}
 			</div>
 
@@ -83,7 +83,7 @@
 											<span class="mr-2 py-1 px-2 text-xs rounded-full bg-white border border-gray-200">{{ loop.index }}</span>
 										</div>
 										<p class="text-sm {{ loop.index == 1 ? 'font-bold' }}">
-											{{ frame.class }}
+											<span class="break-all">{{ frame.class }}</span>
 											{{ frame.class and frame.function ? ' :: ' }}
 											{% if frame.function %}
 												<span class="font-bold font-mono">{{ frame.function }}()</span>
