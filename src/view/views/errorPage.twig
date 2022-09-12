@@ -108,27 +108,39 @@
 
 	<div id="debuggerContainer" class="md:w-2/3 md:absolute p-3 flex-grow flex flex-col" style="top:0;right:0;">
 
-			<div id="frameDisplayPane" class="mt-6 mb-6 p-3 flex-no-grow rounded-md shadow bg-gray-200">
 
-				{% for f, frame in report.getFrames() %}
-					{% set bgColors = {
-						(frame.line): 'bg-orange-200',
-						(frame.line+1): 'bg-orange-100',
-						(frame.line-1): 'bg-orange-100',
-					} %}
-					<div x-show="frame === {{ loop.index }}">
-						<div class="text-sm">
-							{% for l, line in frame.lines if l >= frame.begin and l <= frame.end %}
-								<div class="flex {{ bgColors[l] ?? '' }}">
-									<span class="font-mono pl-1 pr-3 text-gray-500 select-none">{{ l }}</span>
-									<code class="font-mono whitespace-pre-wrap overflow-hidden">{{ line }}</code>
-								</div>
-							{% endfor %}
-						</div>
+		<div id="frameDisplayPane" class="mt-6 mb-1 p-6 flex-no-grow rounded-sm shadow bg-green-700">
+			{% for suggestion in report.getSuggestions() %}
+				{% if suggestion.title %}
+					<h3 class="text-green-100 text-lg font-bold mb-2">{{ suggestion.title }}</h3>
+				{% endif %}
+				{% if suggestion.description %}
+					<div class="text-green-100">{{ suggestion.description }}</div>
+				{% endif %}
+			{% endfor %}
+		</div>
+
+		<div id="frameDisplayPane" class="mt-6 mb-6 p-3 flex-no-grow rounded-md shadow bg-gray-200">
+
+			{% for f, frame in report.getFrames() %}
+				{% set bgColors = {
+					(frame.line): 'bg-orange-200',
+					(frame.line+1): 'bg-orange-100',
+					(frame.line-1): 'bg-orange-100',
+				} %}
+				<div x-show="frame === {{ loop.index }}">
+					<div class="text-sm">
+						{% for l, line in frame.lines if l >= frame.begin and l <= frame.end %}
+							<div class="flex {{ bgColors[l] ?? '' }}">
+								<span class="font-mono pl-1 pr-3 text-gray-500 select-none">{{ l }}</span>
+								<code class="font-mono whitespace-pre-wrap overflow-hidden">{{ line }}</code>
+							</div>
+						{% endfor %}
 					</div>
-				{% endfor %}
+				</div>
+			{% endfor %}
 
-			</div>
+		</div>
 
 			<div id="contextPane" class=" flex-grow rounded-md shadow bg-gray-100">
 

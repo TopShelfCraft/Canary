@@ -5,6 +5,7 @@ use Craft;
 use craft\base\PluginInterface;
 use craft\helpers\App;
 use Throwable;
+use topshelfcraft\canary\base\Exception as CanaryException;
 use topshelfcraft\canary\context\ValueListContext;
 use Yii;
 use yii\base\Module;
@@ -408,6 +409,14 @@ class ErrorReport
 
 		return $tabs;
 
+	}
+
+	public function getSuggestions()
+	{
+		if ($this->error instanceof CanaryException)
+		{
+			return $this->error->getSuggestions();
+		}
 	}
 
 }
