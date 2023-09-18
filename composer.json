@@ -2,7 +2,7 @@
 	"name": "topshelfcraft/canary",
 	"description": "The kinder, cuter, cleverer Craft error handler.",
 	"type": "craft-plugin",
-	"version": "3.0.5",
+	"version": "4.0.0-beta.1",
 	"keywords": [
 		"error",
 		"errors",
@@ -14,32 +14,27 @@
 		"craft",
 		"craft cms"
 	],
-	"support": {
-		"email": "support@topshelfcraft.com"
-	},
 	"license": "proprietary",
 	"authors": [
 		{
-			"name": "Michael Rog",
+			"name": "Top Shelf Craft (Michael Rog)",
 			"homepage": "https://topshelfcraft.com"
 		}
 	],
 	"require": {
-		"craftcms/cms": "^3.5",
-		"filp/whoops": "^2.7.3",
-		"phpdocumentor/reflection-docblock": "^4.3.4 || ^5.0",
-		"symfony/var-dumper": "^3.0 || ^4.0 || ^5.0",
-		"topshelfcraft/canary-base": "^3.0"
+		"craftcms/cms": "^4.5.5",
+		"phpdocumentor/reflection-docblock": "^5.3.0",
+		"symfony/var-dumper": "^5.0||^6.0",
+		"topshelfcraft/base": "^4.0.2"
 	},
 	"autoload": {
 		"psr-4": {
-			"topshelfcraft\\canary\\": "src/"
+			"TopShelfCraft\\Canary\\": "src/"
 		}
 	},
 	"extra": {
 		"name": "Canary",
 		"handle": "canary",
-		"changelogUrl": "https://raw.githubusercontent.com/topshelfcraft/canary/master/CHANGELOG.md",
-		"class": "topshelfcraft\\canary\\Canary"
+		"class": "TopShelfCraft\\Canary\\Canary"
 	}
 }

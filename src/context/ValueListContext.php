@@ -1,37 +1,23 @@
 <?php
-namespace topshelfcraft\canary\context;
+namespace TopShelfCraft\Canary\context;
 
-use topshelfcraft\canary\view\renderers\WebRenderer;
+use TopShelfCraft\Canary\view\renderers\WebRenderer;
 
 class ValueListContext extends ContextType
 {
 
-	/**
-	 * @var array
-	 */
-	protected $values = [];
-
-	public function __construct(array $values = [])
+	public function __construct(
+		protected array $values = [],
+	)
 	{
-		$this->values = $values;
 	}
 
-	/**
-	 * @return array
-	 */
-	public function getValues()
+	public function getValues(): array
 	{
 		return $this->values;
 	}
 
-	/**
-	 * @return string
-	 *
-	 * @throws \Twig\Error\LoaderError
-	 * @throws \Twig\Error\RuntimeError
-	 * @throws \Twig\Error\SyntaxError
-	 */
-	public function renderWeb()
+	public function renderWeb(): string
 	{
 		return (new WebRenderer())->renderValueListContext($this);
 	}

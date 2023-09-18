@@ -1,12 +1,13 @@
 <?php
-namespace topshelfcraft\canary;
+namespace TopShelfCraft\Canary;
 
 use Craft;
 use craft\base\PluginInterface;
 use craft\helpers\App;
+use craft\helpers\ArrayHelper;
+use craft\helpers\Template;
 use Throwable;
-use topshelfcraft\canary\base\Exception as CanaryException;
-use topshelfcraft\canary\context\ValueListContext;
+use TopShelfCraft\Canary\context\ValueListContext;
 use Yii;
 use yii\base\Module;
 
@@ -14,51 +15,31 @@ class ErrorReport
 {
 
 	/**
-	 * @var Throwable
-	 */
-	protected $error;
-
-	/**
-	 * @var ErrorHandler
-	 */
-	protected $handler;
-
-	/**
 	 * @var int maximum number of source code lines to be displayed. Defaults to 19.
 	 *
-	 * TODO: Make configurable
+	 * @todo: Make configurable
 	 */
-	protected $maxSourceLines = 19;
+	protected int $maxSourceLines = 19;
 
 	/**
 	 * @var int maximum number of trace source code lines to be displayed. Defaults to 13.
 	 *
-	 * TODO: Make configurable
+	 * @todo: Make configurable
 	 */
-	protected $maxTraceSourceLines = 13;
+	protected int $maxTraceSourceLines = 13;
 
-	/**
-	 * @param Throwable $error
-	 * @param ErrorHandler|null $handler
-	 */
-	public function __construct(Throwable $error, ErrorHandler $handler = null)
+	public function __construct(
+		protected Throwable $error,
+		protected ?ErrorHandler $handler = null)
 	{
-		$this->error = $error;
-		$this->handler = $handler;
 	}
 
-	/**
-	 * @return Throwable
-	 */
-	public function getError()
+	public function getError(): Throwable
 	{
 		return $this->error;
 	}
 
-	/**
-	 * @return string|null
-	 */
-	public function getErrorName()
+	public function getErrorName(): ?string
 	{
 
 		if ($this->handler && $this->error instanceof \Exception)
@@ -66,6 +47,7 @@ class ErrorReport
 			return $this->handler->getExceptionName($this->error);
 		}
 
+		// https://www.yiiframework.com/doc/api/2.0/yii-base-exception
 		if (method_exists($this->error, 'getName'))
 		{
 			return $this->error->getName();
@@ -75,13 +57,10 @@ class ErrorReport
 
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getErrorMessage()
+	public function getErrorMessage(): string
 	{
 
-		if ($this->handler && ($message = $this->handler->getErrorMessage($this->error)))
+		if ($message = $this->handler?->getErrorMessage($this->error))
 		{
 			return $message;
 		}
@@ -96,24 +75,19 @@ class ErrorReport
 
 	}
 
-	/**
-	 * @return array
-	 */
-	public function getFrames()
+	public function getFrames(): array
 	{
 
-		$frames = array_merge(
+		$frames = [
 			[
-				[
-					'file' => $this->error->getFile(),
-					'line' => $this->error->getLine(),
-					'class' => get_class($this->error),
-					'function' => null,
-					'args' => null,
-				]
+				'file' => $this->error->getFile(),
+				'line' => $this->error->getLine(),
+				'class' => get_class($this->error),
+				'function' => null,
+				'args' => null,
 			],
-			$this->error->getTrace()
-		);
+			...$this->error->getTrace(),
+		];
 
 		$out = [];
 
@@ -128,6 +102,17 @@ class ErrorReport
 			$line = $frame['line'] ?? null;
 
 			if ($file !== null && $line !== null) {
+
+				try
+				{
+					$templateInfo = Template::resolveTemplatePathAndLine($file, $line);
+					if ($templateInfo !== false) {
+						[$file, $line] = $templateInfo;
+						$frame['file'] = $file;
+						$frame['line'] = $line;
+					}
+				}
+				catch (Throwable) {}
 
 				$line--; // adjust line number from one-based to zero-based
 				$lines = @file($file);
@@ -170,10 +155,7 @@ class ErrorReport
 
 	}
 
-	/**
-	 * @return array
-	 */
-	public function getContextTabs()
+	public function getContextTabs(): array
 	{
 
 		$tabs = [
@@ -181,7 +163,7 @@ class ErrorReport
 			"User" => [],
 			"App" => [],
 			"Environment" => [],
-			"Debug" => [],
+			// TODO: "Debug" => [],
 		];
 
 		try
@@ -190,7 +172,6 @@ class ErrorReport
 			{
 				$tabs["Request"]["Query Params / GET"] = new ValueListContext(array_map('json_encode', $queryParams));
 			}
-
 		}
 		catch(Throwable $e)
 		{
@@ -232,9 +213,30 @@ class ErrorReport
 			// TODO: Display error message.
 		}
 
-		// TODO: Add Cookies to "Request" tab.
+		try
+		{
 
+			// Remove any arrays from $_COOKIE to get around an "Array to string conversion" error
+			$cookieVals = [];
+			if (isset($_COOKIE))
+			{
+				foreach ($_COOKIE as $key => $value)
+				{
+					if (is_array($value))
+					{
+						$value = '(Array)';
+					}
+					$cookieVals[$key] = Craft::$app->getSecurity()->redactIfSensitive($key, $value);
+				}
+			}
 
+			$tabs["Request"]['Cookies'] = new ValueListContext($cookieVals);
+
+		}
+		catch(Throwable $e)
+		{
+			// TODO: Render useful error message as Message context.
+		}
 
 		try
 		{
@@ -249,8 +251,6 @@ class ErrorReport
 
 		// TODO: Add Browser to "User" tab
 		// TODO: Device to "User" tab
-
-
 
 		try
 		{
@@ -335,7 +335,35 @@ class ErrorReport
 			// TODO: Render useful error message as Message context.
 		}
 
+		try
+		{
 
+			$cpTemplateRoots = array_map(
+				function(array $paths) {
+					return ArrayHelper::firstValue($paths);
+				},
+				Craft::$app->view->getCpTemplateRoots()
+			);
+
+			ksort($cpTemplateRoots);
+
+			$tabs["App"]["CP Template Roots"] = new ValueListContext($cpTemplateRoots);
+
+			$siteTemplateRoots = array_map(
+				function(array $paths) {
+					return ArrayHelper::firstValue($paths);
+				},
+				Craft::$app->view->getSiteTemplateRoots()
+			);
+			ksort($siteTemplateRoots);
+
+			$tabs["App"]["Site Template Roots"] = new ValueListContext($cpTemplateRoots);
+
+		}
+		catch(Throwable $e)
+		{
+			// TODO: Render useful error message as Message context.
+		}
 
 		try
 		{
@@ -375,48 +403,16 @@ class ErrorReport
 			// TODO: Render useful error message as Message context.
 		}
 
-		try
-		{
-
-			// Remove any arrays from $_COOKIE to get around an "Array to string conversion" error
-			$cookieVals = [];
-			if (isset($_COOKIE))
-			{
-				foreach ($_COOKIE as $key => $value)
-				{
-					if (is_array($value))
-					{
-						$value = '(Array)';
-					}
-					$cookieVals[$key] = Craft::$app->getSecurity()->redactIfSensitive($key, $value);
-				}
-			}
-
-			$tabs["Environment"]['Cookies'] = new ValueListContext($cookieVals);
-
-		}
-		catch(Throwable $e)
-		{
-			// TODO: Render useful error message as Message context.
-		}
-
-
-
 		// TODO: Add Chirps to "Debug" tab.
 		// TODO: Add Timing to "Debug" tab.
-
-
 
 		return $tabs;
 
 	}
 
-	public function getSuggestions()
+	public function getSuggestions(): array
 	{
-		if ($this->error instanceof CanaryException)
-		{
-			return $this->error->getSuggestions();
-		}
+		return ErrorHelper::suggestionsFromError($this->error);
 	}
 
 }

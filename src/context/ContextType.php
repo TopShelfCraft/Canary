@@ -1,5 +1,5 @@
 <?php
-namespace topshelfcraft\canary\context;
+namespace TopShelfCraft\Canary\context;
 
 abstract class ContextType
 {

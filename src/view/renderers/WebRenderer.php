@@ -1,24 +1,17 @@
 <?php
-namespace topshelfcraft\canary\view\renderers;
+namespace TopShelfCraft\Canary\view\renderers;
 
-use craft\helpers\Template;
-use topshelfcraft\canary\context\ValueListContext;
-use topshelfcraft\canary\context\VarDumpContext;
-use topshelfcraft\canary\ErrorReport;
+use TopShelfCraft\Canary\context\ValueListContext;
+use TopShelfCraft\Canary\context\VarDumpContext;
+use TopShelfCraft\Canary\ErrorReport;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
 class WebRenderer
 {
 
-	/**
-	 * @var Environment
-	 */
-	protected $twig;
+	protected Environment $twig;
 
-	/**
-	 *
-	 */
 	public function __construct()
 	{
 		$templatesPath = realpath(__DIR__.DIRECTORY_SEPARATOR.'..') . DIRECTORY_SEPARATOR . 'views';
@@ -27,16 +20,11 @@ class WebRenderer
 	}
 
 	/**
-	 * @param ErrorReport $report
-	 * @param array $with
-	 *
-	 * @return string
-	 *
 	 * @throws \Twig\Error\LoaderError
 	 * @throws \Twig\Error\RuntimeError
 	 * @throws \Twig\Error\SyntaxError
 	 */
-	public function renderErrorPage(ErrorReport $report, $with = [])
+	public function renderErrorPage(ErrorReport $report, array $with = []): string
 	{
 		return $this->twig->render(
 			'errorPage.twig',
@@ -45,40 +33,32 @@ class WebRenderer
 	}
 
 	/**
-	 * @param ValueListContext $context
-	 * @param array $with
-	 *
-	 * @return string
-	 *
 	 * @throws \Twig\Error\LoaderError
 	 * @throws \Twig\Error\RuntimeError
 	 * @throws \Twig\Error\SyntaxError
 	 */
-	public function renderValueListContext(ValueListContext $context, $with = [])
+	public function renderValueListContext(ValueListContext $context, array $with = []): string
 	{
-		$rendered = $this->twig->render(
+		/*
+		 * TODO: Return this as Twig\Markup to avoid needing `raw` in the template.
+		 * (Maybe some values might be user-generated, and failing to escape them could be a security concern?)
+		 * See `Temeplate::raw()`
+		 */
+		return $this->twig->render(
 			'_valueListContext.twig',
 			array_merge(['context' => $context], $with)
 		);
-		return Template::raw($rendered);
 	}
 
 	/**
-	 * @param VarDumpContext $context
-	 * @param array $with
-	 *
-	 * @return string
-	 *
 	 * @throws \Twig\Error\LoaderError
 	 * @throws \Twig\Error\RuntimeError
 	 * @throws \Twig\Error\SyntaxError
 	 */
-	public function renderVarDumpContext(VarDumpContext $context, $with = [])
+	public function renderVarDumpContext(VarDumpContext $context, array $with = []): string
 	{
-		return $this->twig->render(
-			'_varDumpContext.twig',
-			array_merge(['context' => $context], $with)
-		);
+		throw new \Exception("Not implemented yet.");
+		// TODO: Implement
 	}
 
 }

@@ -5,22 +5,30 @@
 
 <head>
 
-	<meta charset="utf-8"/>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 	<title>
 		{{ e.getMessage() }}
 	</title>
 
 	<style>
+
 		html { scroll-behavior: smooth; }
 		@media screen and (prefers-reduced-motion: reduce) {
 			html {
 				scroll-behavior: auto;
 			}
 		}
-		{{ source('assets/errorPage.css') }}
-		{{ source('assets/_tailwind.css') }}
+
+		.valueListKey:after {
+			content: ':';
+			margin-left: 3px;
+		}
+
 	</style>
+
+	<script src="https://cdn.tailwindcss.com?plugins=typography"></script>
 
 	<script>
 		var app = {
@@ -59,7 +67,7 @@
 
 			</div>
 
-			<div class="p-6 rounded-sm shadow bg-gray-800 text-gray-200 text-lg font-medium break-words">
+			<div class="p-6 rounded-sm shadow bg-gray-700 text-gray-100 text-lg font-medium break-words">
 				{{ report.getErrorMessage() }}
 			</div>
 
@@ -74,9 +82,9 @@
 			<div class="overflow-y-auto">
 				<ul>
 					{% for frame in report.getFrames() %}
-						<li class="overflow-hidden" :class="{ 'active border-l-2 border-orange-600 bg-gray-200 text-gray-900': frame === {{ loop.index }} }">
+						<li class="overflow-hidden" :class="{ 'active border-l-2 border-amber-400 bg-gray-200 text-gray-900': frame === {{ loop.index }} }">
 							<a href="#debuggerContainer" @click="changeFrame({{ loop.index }})"
-							   class="flex items-center hover:bg-yellow-100 focus:outline-none focus:bg-gray-300">
+							   class="flex items-center hover:bg-amber-100/50 focus:outline-none focus:bg-gray-300">
 								<div class="p-3 overflow-hidden">
 									<div class="flex items-center mb-3">
 										<div class="flex-no-grow leading-none">
@@ -108,34 +116,42 @@
 
 	<div id="debuggerContainer" class="md:w-2/3 md:absolute p-3 flex-grow flex flex-col" style="top:0;right:0;">
 
-
-		<div id="frameDisplayPane" class="mt-6 mb-1 p-6 flex-no-grow rounded-sm shadow bg-green-700">
-			{% for suggestion in report.getSuggestions() %}
+		{% for suggestion in report.getSuggestions() %}
+			<div id="frameDisplayPane" class="mt-6 mb-1 flex-no-grow rounded-sm shadow bg-emerald-700">
 				{% if suggestion.title %}
-					<h3 class="text-green-100 text-lg font-bold mb-2">{{ suggestion.title }}</h3>
+					<h3 class="text-white text-lg font-medium break-words py-4 px-6 border-b border-dotted border-emerald-800 shadow">{{ suggestion.title }}</h3>
 				{% endif %}
 				{% if suggestion.description %}
-					<div class="text-green-100">{{ suggestion.description }}</div>
+					<div class="text-white py-4 px-6 prose prose-pre:bg-black/10 prose-strong:text-emerald-50">
+						{{ suggestion.renderDescription | raw }}
+					</div>
 				{% endif %}
-			{% endfor %}
-		</div>
+			</div>
+		{% endfor %}
 
 		<div id="frameDisplayPane" class="mt-6 mb-6 p-3 flex-no-grow rounded-md shadow bg-gray-200">
 
 			{% for f, frame in report.getFrames() %}
 				{% set bgColors = {
-					(frame.line): 'bg-orange-200',
-					(frame.line+1): 'bg-orange-100',
-					(frame.line-1): 'bg-orange-100',
+					(frame.line): 'bg-amber-200/50',
+					(frame.line+1): 'bg-amber-100/50',
+					(frame.line-1): 'bg-amber-100/50',
 				} %}
 				<div x-show="frame === {{ loop.index }}">
 					<div class="text-sm">
-						{% for l, line in frame.lines if l >= frame.begin and l <= frame.end %}
+						{% for l, line in frame.lines | filter((line, l) => l >= frame.begin and l <= frame.end) %}
 							<div class="flex {{ bgColors[l] ?? '' }}">
 								<span class="font-mono pl-1 pr-3 text-gray-500 select-none">{{ l }}</span>
 								<code class="font-mono whitespace-pre-wrap overflow-hidden">{{ line }}</code>
 							</div>
 						{% endfor %}
+					</div>
+					<div>
+					{% if frame.getComments() %}
+						{% for c, comment in frame.getComments %}
+							{{ c }} {{ comment }} hi!
+						{% endfor %}
+					{% endif %}
 					</div>
 				</div>
 			{% endfor %}
@@ -147,8 +163,8 @@
 				<div class="border-b border-gray-200">
 					<nav class="-mb-px flex justify-start">
 						{% for title, tab in report.getContextTabs() %}
-							<a href="#" :class="{ 'active border-orange-600 bg-gray-200 text-gray-900': tab === '{{ title }}' }" @click.prevent="changeTab('{{ title }}')"
-							   class="block flex-grow whitespace-no-wrap text-center py-4 px-4 border-b-2 font-medium text-sm leading-5 text-gray-600 hover:bg-yellow-100">
+							<a href="#" :class="{ 'active border-amber-400 bg-gray-200 text-gray-900': tab === '{{ title }}' }" @click.prevent="changeTab('{{ title }}')"
+							   class="block flex-grow whitespace-no-wrap text-center py-4 px-4 border-b-2 font-medium text-sm leading-5 text-gray-600 hover:bg-amber-100/50">
 								{{ title }}
 							</a>
 						{% endfor %}
@@ -159,7 +175,7 @@
 				<div class="p-6" x-show="tab === '{{ title }}'">
 					{% for heading, context in tab %}
 					<h3 class="font-bold text-base mb-3">{{ heading }}</h3>
-					{{  context.renderWeb() }}
+					{{ context.renderWeb() | raw }}
 					{% endfor %}
 				</div>
 				{% endfor %}
@@ -168,7 +184,7 @@
 
 	</div>
 
-	<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+	<script src="//unpkg.com/alpinejs" defer></script>
 
 </body>
 

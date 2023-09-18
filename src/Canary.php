@@ -1,34 +1,19 @@
 <?php
-namespace topshelfcraft\canary;
+namespace TopShelfCraft\Canary;
 
 use Craft;
-use craft\base\Plugin;
+use TopShelfCraft\base\Plugin;
 
 class Canary extends Plugin
 {
-
-	/**
-	 * @var bool
-	 */
-	public $hasCpSection = false;
-
-	/**
-	 * @var bool
-	 */
-	public $hasCpSettings = false;
-
-	/**
-	 * @inheritdoc
-	 */
 	public function init()
 	{
-		Craft::$app->set(
-			'errorHandler',
-			[
-				'class' => ErrorHandler::class
-			]
-		);
+
+		Craft::setAlias("@TopShelfCraft/Canary", __DIR__);
+
+		Craft::$app->set('errorHandler', ErrorHandler::class);
 		Craft::$app->getErrorHandler()->register();
+
 	}
 
 }

@@ -1,14 +1,11 @@
 <?php
-namespace topshelfcraft\canary\context;
+namespace TopShelfCraft\Canary\context;
 
-use topshelfcraft\canary\view\renderers\WebRenderer;
+use TopShelfCraft\Canary\view\renderers\WebRenderer;
 
 class VarDumpContext extends ContextType
 {
 
-	/**
-	 *
-	 */
 	public function renderWeb()
 	{
 		return (new WebRenderer())->renderVarDumpContext($this);

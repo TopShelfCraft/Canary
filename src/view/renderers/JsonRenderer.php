@@ -1,7 +1,6 @@
 <?php
-namespace topshelfcraft\canary\view\renderers;
+namespace TopShelfCraft\Canary\view\renderers;
 
 class JsonRenderer
 {
-
 }
