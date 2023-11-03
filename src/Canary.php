@@ -8,6 +8,9 @@ class Canary extends Plugin
 {
 	public function init()
 	{
+		if (Craft::$app->getRequest()->getIsConsoleRequest()) {
+			return;
+		}
 
 		Craft::setAlias("@TopShelfCraft/Canary", __DIR__);
 
